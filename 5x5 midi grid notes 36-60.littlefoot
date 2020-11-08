@@ -1,0 +1,81 @@
+void initialise()
+{
+    clearDisplay();
+    for (int g=0;g<25;g++)
+    {
+        if (g % 2 == 0)
+        {
+            fillRect (0x0d0702, g%5*3, int(g/5)*3, 3, 3);
+        }
+        else 
+        {
+            fillRect (0x1a0e05, g%5*3, int(g/5)*3, 3, 3);
+        }
+    }
+}
+
+void handleMIDI(int type, int note, int velocity)
+{
+    if (type == 144)
+    {
+        if (note>=36 && note <=60)
+        {
+            int r = int(map(float(velocity),0.0,127.0,25.5,255.0));
+            int g = int(map(float(velocity),0.0,127.0,13.6,136.0));
+            int b = int(map(float(velocity),0.0,127.0,5.1,51.0));
+            int col = makeARGB(255,r,g,b);
+            int pos = note - 36;
+            fillRect(col,(pos%5)*3,int(pos/5)*3,3,3);
+        }
+    }
+    if (type == 128)
+    {
+        if (note>=36 && note<=60)
+        {
+            int pos_off = note - 36;
+            if (pos_off % 2 == 0)
+            {
+                fillRect(0x0d0702,(pos_off%5)*3,int(pos_off/5)*3,3,3);
+            }
+            else 
+            {
+                fillRect(0x1a0e05,(pos_off%5)*3,int(pos_off/5)*3,3,3);
+            }
+        }
+    }
+}
+
+void touchStart (int index, float x, float y, float z, float vz)
+{
+	int x_int = convertPositionToPixel(x);
+	int y_int = convertPositionToPixel(y);
+    int note = x_int/3+(y_int/3)*5+36;
+	setHeapByte(index, note);
+	sendNoteOn(0,note,127);
+}
+
+void touchMove (int index, float x, float y, float z, float vz)
+{
+	int x_int = convertPositionToPixel(x);
+	int y_int = convertPositionToPixel(y);
+	int newnote = x_int/3+(y_int/3)*5+36;
+	int note = getHeapByte(index);
+	if (note != newnote)
+	{
+	    sendNoteOff(0,note,127);note=newnote;sendNoteOn(0,note,127);setHeapByte(index,newnote);
+	}
+}
+
+
+void touchEnd (int index, float x, float y, float z, float vz)
+{
+    sendNoteOff(0,getHeapByte(index),127);
+}
+
+
+
+int convertPositionToPixel (float pos) 
+{ 
+    return int (map(pos,0.0,1.9,0.15,4.55)) * 3; 
+}
+
